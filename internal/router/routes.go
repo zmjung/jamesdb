@@ -1,11 +1,19 @@
 package router
 
 import (
-	"github.com/zmjung/jamesdb/internal/handler"
 	"github.com/gin-gonic/gin"
+	"github.com/zmjung/jamesdb/internal/handler"
 )
 
-func SetupRoutes(e *gin.Engine) {
-	// Health check endpoint
-	e.GET("/health", handler.GetHealthCheck)
+func SetupRoutes(r *gin.Engine) {
+	healthRouter := r.Group("/health")
+	{
+		healthRouter.GET("", handler.GetHealth)
+	}
+
+	readRouter := r.Group("/api/v1/graph")
+	{
+		readRouter.GET("/node", handler.GetGraphNodes)
+		// readRouter.GET("/node/:nodeid", handler.GetGraphNode)
+	}
 }
