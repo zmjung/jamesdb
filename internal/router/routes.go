@@ -5,15 +5,25 @@ import (
 	"github.com/zmjung/jamesdb/internal/handler"
 )
 
-func SetupRoutes(r *gin.Engine) {
-	healthRouter := r.Group("/health")
+type Router struct {
+	GraphHandler *handler.GraphHandler
+}
+
+func NewRouter(gh *handler.GraphHandler) *Router {
+	return &Router{
+		GraphHandler: gh,
+	}
+}
+
+func (r *Router) SetupRoutes(engine *gin.Engine) {
+	healthRouter := engine.Group("/health")
 	{
 		healthRouter.GET("", handler.GetHealth)
 	}
 
-	readRouter := r.Group("/api/v1/graph")
+	graphRouter := engine.Group("/api/v1/graph")
 	{
-		readRouter.GET("/node", handler.GetGraphNodes)
+		graphRouter.GET("/node/:clusterId", r.GraphHandler.GetGraphNodes)
 		// readRouter.GET("/node/:nodeid", handler.GetGraphNode)
 	}
 }

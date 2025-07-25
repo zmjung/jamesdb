@@ -7,5 +7,7 @@ import (
 func WriteNodeData(node *graph.Node) error {
 	// Converts the node data to a csv format
 	// and writes it to a disk file.
+
+	// convert node to csv format
 	return nil
 }

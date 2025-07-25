@@ -1,11 +1,29 @@
 package handler
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
-	graph "github.com/zmjung/jamesdb/graph"
+	"github.com/zmjung/jamesdb/config"
+	"github.com/zmjung/jamesdb/graph"
 )
 
-func GetGraphNodes(c *gin.Context) {
+type GraphHandler struct {
+	StorageRootPath string
+}
+
+func NewGraphHandler(cfg config.Config) *GraphHandler {
+	return &GraphHandler{
+		StorageRootPath: cfg.Database.RootPath,
+	}
+}
+
+func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
+	// TODO: sanitize clusterId input
+	clusterId := c.Param("clusterId")
+	fmt.Printf("%s\n", gh.StorageRootPath+"/nodes/"+clusterId+".csv")
+	// This is a placeholder for the actual logic to retrieve graph nodes.
+	// For now, we will return a static list of nodes.
 	nodes := []graph.Node{
 		{
 			ID:     "1",
