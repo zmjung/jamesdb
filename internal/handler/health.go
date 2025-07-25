@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"net/http"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func GetHealth(c *gin.Context) {
-	c.JSON(http.StatusOK, map[string]string {"status": "healthy"})
+	c.JSON(http.StatusOK, map[string]string{"status": "healthy"})
 }
