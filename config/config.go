@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/yaml.v2"
 )
@@ -42,9 +43,15 @@ func readFile(cfg *Config, configPath string) error {
 }
 
 func readEnv(cfg *Config) error {
-	err := envconfig.Process("", cfg)
-	if err != nil {
-		fmt.Printf("Error reading environment variables: %v\n", err)
+	// Load .env file (optional)
+	if err := godotenv.Load(); err != nil {
+		fmt.Printf("Error loading .env file: %v\n", err)
+		return err
 	}
-	return err
+
+	if err := envconfig.Process("", cfg); err != nil {
+		fmt.Printf("Error reading environment variables: %v\n", err)
+		return err
+	}
+	return nil
 }

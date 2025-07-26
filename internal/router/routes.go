@@ -23,7 +23,9 @@ func (r *Router) SetupRoutes(engine *gin.Engine) {
 
 	graphRouter := engine.Group("/api/v1/graph")
 	{
-		graphRouter.GET("/node/:clusterId", r.GraphHandler.GetGraphNodes)
+		graphRouter.GET("/node/:type", r.GraphHandler.GetGraphNodes)
 		// readRouter.GET("/node/:nodeid", handler.GetGraphNode)
+
+		graphRouter.POST("/node", r.GraphHandler.WriteGraphNode)
 	}
 }

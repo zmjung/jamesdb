@@ -6,31 +6,64 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/zmjung/jamesdb/config"
 	"github.com/zmjung/jamesdb/graph"
+	"github.com/zmjung/jamesdb/internal/grapher"
+	"github.com/zmjung/jamesdb/internal/uuid"
 )
 
 type GraphHandler struct {
 	StorageRootPath string
+	GraphWriter     *grapher.GraphWriter
 }
 
-func NewGraphHandler(cfg config.Config) *GraphHandler {
+func NewGraphHandler(cfg config.Config, gw *grapher.GraphWriter) *GraphHandler {
 	return &GraphHandler{
 		StorageRootPath: cfg.Database.RootPath,
+		GraphWriter:     gw,
 	}
 }
 
 func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
-	// TODO: sanitize clusterId input
-	clusterId := c.Param("clusterId")
-	fmt.Printf("%s\n", gh.StorageRootPath+"/nodes/"+clusterId+".csv")
+	// TODO: sanitize type input
+	nodeType := c.Param("type")
+	fmt.Printf("%s\n", gh.StorageRootPath+"/nodes/"+nodeType+".csv")
 	// This is a placeholder for the actual logic to retrieve graph nodes.
 	// For now, we will return a static list of nodes.
 	nodes := []graph.Node{
 		{
 			ID:     "1",
+			Type:   nodeType,
 			Name:   "Node 1",
 			Edges:  []string{"2", "3"},
 			Traits: map[string]string{"color": "red", "size": "large"},
 		},
 	}
 	c.JSON(200, nodes)
+}
+
+func (gh *GraphHandler) WriteGraphNode(c *gin.Context) {
+	// This function writes a graph node to the storage.
+
+	node := &graph.Node{}
+	if err := c.ShouldBindJSON(node); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid input", "node": node})
+		return
+	}
+	c.BindJSON(node)
+
+	id, err := uuid.GenerateUUID()
+	if err != nil {
+		fmt.Printf("Error generating UUID: %v\n", err)
+		c.JSON(500, gin.H{"error": "Failed to generate UUID", "node": node})
+		return
+	}
+	node.ID = id
+
+	err = gh.GraphWriter.WriteNodeData(node)
+	if err != nil {
+		fmt.Printf("Error writing node data: %v\n", err)
+		c.JSON(500, gin.H{"error": "Failed to write node data", "node": node})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Node data written successfully", "node": node})
 }

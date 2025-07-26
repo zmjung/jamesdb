@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/zmjung/jamesdb/config"
+	"github.com/zmjung/jamesdb/internal/grapher"
 	"github.com/zmjung/jamesdb/internal/handler"
 	"github.com/zmjung/jamesdb/internal/router"
 )
@@ -18,7 +19,11 @@ func main() {
 
 	engine := gin.Default()
 
-	graphHandler := handler.NewGraphHandler(cfg)
+	gw := grapher.NewGraphWriter(&cfg)
+	if gw == nil {
+		panic("Failed to create GraphWriter")
+	}
+	graphHandler := handler.NewGraphHandler(cfg, gw)
 	router := router.NewRouter(graphHandler)
 	router.SetupRoutes(engine)
 
