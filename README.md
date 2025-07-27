@@ -7,3 +7,4 @@ Next step:
 - [ ] store Nodes in file storage -> csv
 - [ ] file -> memory (don't hold graph in memory for now)
 - [ ] create a test
+- [ ] fix read api because custom unmarshal not working
