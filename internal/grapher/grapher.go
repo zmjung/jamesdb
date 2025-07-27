@@ -5,12 +5,11 @@ import (
 
 	"github.com/zmjung/jamesdb/config"
 	"github.com/zmjung/jamesdb/graph"
-	"github.com/zmjung/jamesdb/internal/converter"
 	"github.com/zmjung/jamesdb/internal/disk"
 )
 
 const (
-	NodeCsvHeader = "ID,Type,Name,Edges,Traits\n"
+	NodeCsvHeader = "id,type,name,edges,traits\n"
 )
 
 type GraphService struct {
@@ -33,12 +32,22 @@ func NewGraphService(cfg *config.Config) *GraphService {
 	}
 }
 
+func (gw *GraphService) GetAllNodesByType(nodeType string) ([]graph.Node, error) {
+	// This function retrieves all nodes of a specific type from the storage.
+
+	filePath := disk.GetFilePath(gw.NodePath, nodeType+".csv")
+	nodes, err := disk.ReadNodesFromFile(filePath)
+	if err != nil {
+		fmt.Printf("Error reading nodes from CSV file: %v\n", err)
+		return nil, err
+	}
+
+	return nodes, nil
+}
+
 func (gw *GraphService) WriteNode(node *graph.Node) error {
 	// Converts the node data to a csv format
 	// and writes it to a disk file.
-
-	// convert node to csv format
-	csvData := converter.ConvertToCSV(node)
 
 	filePath := disk.GetFilePath(gw.NodePath, node.Type+".csv")
 
@@ -55,5 +64,5 @@ func (gw *GraphService) WriteNode(node *graph.Node) error {
 
 	// save the csv data to a file
 	// file name is based on node type
-	return disk.WriteCsvToFile(filePath, csvData)
+	return disk.WriteNodeToFile(filePath, node)
 }

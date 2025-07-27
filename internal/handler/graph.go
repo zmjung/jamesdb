@@ -25,17 +25,11 @@ func NewGraphHandler(cfg config.Config, gs *grapher.GraphService) *GraphHandler 
 func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
 	// TODO: sanitize type input
 	nodeType := c.Param("type")
-	fmt.Printf("%s\n", gh.StorageRootPath+"/nodes/"+nodeType+".csv")
-	// This is a placeholder for the actual logic to retrieve graph nodes.
-	// For now, we will return a static list of nodes.
-	nodes := []graph.Node{
-		{
-			ID:     "1",
-			Type:   nodeType,
-			Name:   "Node 1",
-			Edges:  []string{"2", "3"},
-			Traits: map[string]string{"color": "red", "size": "large"},
-		},
+	nodes, err := gh.GraphService.GetAllNodesByType(nodeType)
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": fmt.Sprintf("Failed to retrieve nodes of type %s: %v", nodeType, err)})
+		return
 	}
 	c.JSON(200, nodes)
 }
