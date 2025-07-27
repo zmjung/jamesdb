@@ -40,7 +40,7 @@ func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
 	c.JSON(200, nodes)
 }
 
-func (gh *GraphHandler) WriteGraphNode(c *gin.Context) {
+func (gh *GraphHandler) CreateGraphNode(c *gin.Context) {
 	// This function writes a graph node to the storage.
 
 	node := &graph.Node{}
