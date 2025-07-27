@@ -19,11 +19,11 @@ func main() {
 
 	engine := gin.Default()
 
-	gw := grapher.NewGraphWriter(&cfg)
-	if gw == nil {
+	gs := grapher.NewGraphService(&cfg)
+	if gs == nil {
 		panic("Failed to create GraphWriter")
 	}
-	graphHandler := handler.NewGraphHandler(cfg, gw)
+	graphHandler := handler.NewGraphHandler(cfg, gs)
 	router := router.NewRouter(graphHandler)
 	router.SetupRoutes(engine)
 

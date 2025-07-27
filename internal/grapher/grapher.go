@@ -13,12 +13,12 @@ const (
 	NodeCsvHeader = "ID,Type,Name,Edges,Traits\n"
 )
 
-type GraphWriter struct {
+type GraphService struct {
 	StorageRootPath string
 	NodePath        string
 }
 
-func NewGraphWriter(cfg *config.Config) *GraphWriter {
+func NewGraphService(cfg *config.Config) *GraphService {
 	nodePath, err := disk.AddFolder(cfg.Database.RootPath, "nodes")
 	if err != nil {
 		fmt.Printf("Error creating nodes folder: %v\n", err)
@@ -27,13 +27,13 @@ func NewGraphWriter(cfg *config.Config) *GraphWriter {
 
 	fmt.Println("Node path:", nodePath)
 
-	return &GraphWriter{
+	return &GraphService{
 		StorageRootPath: cfg.Database.RootPath,
 		NodePath:        nodePath,
 	}
 }
 
-func (gw *GraphWriter) WriteNodeData(node *graph.Node) error {
+func (gw *GraphService) WriteNode(node *graph.Node) error {
 	// Converts the node data to a csv format
 	// and writes it to a disk file.
 

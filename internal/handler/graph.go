@@ -12,13 +12,13 @@ import (
 
 type GraphHandler struct {
 	StorageRootPath string
-	GraphWriter     *grapher.GraphWriter
+	GraphService    *grapher.GraphService
 }
 
-func NewGraphHandler(cfg config.Config, gw *grapher.GraphWriter) *GraphHandler {
+func NewGraphHandler(cfg config.Config, gs *grapher.GraphService) *GraphHandler {
 	return &GraphHandler{
 		StorageRootPath: cfg.Database.RootPath,
-		GraphWriter:     gw,
+		GraphService:    gs,
 	}
 }
 
@@ -58,7 +58,7 @@ func (gh *GraphHandler) WriteGraphNode(c *gin.Context) {
 	}
 	node.ID = id
 
-	err = gh.GraphWriter.WriteNodeData(node)
+	err = gh.GraphService.WriteNode(node)
 	if err != nil {
 		fmt.Printf("Error writing node data: %v\n", err)
 		c.JSON(500, gin.H{"error": "Failed to write node data", "node": node})
