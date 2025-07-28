@@ -3,11 +3,12 @@ package disk
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/jszwec/csvutil"
-	"github.com/zmjung/jamesdb/graph"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/jszwec/csvutil"
+	"github.com/zmjung/jamesdb/graph"
 )
 
 func ReadNodesFromFile(filePath string) ([]graph.Node, error) {
@@ -80,7 +81,7 @@ func encodeList(list []string) ([]byte, error) {
 	return []byte("[\"" + strings.Join(list, "\",\"") + "\"]"), nil
 }
 
-func decodeList(data []byte, list []string) error {
+func decodeList(data []byte, list *[]string) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -92,7 +93,7 @@ func decodeList(data []byte, list []string) error {
 
 	items := strings.Split(str, "\",\"")
 	for _, item := range items {
-		list = append(list, strings.Trim(item, "\""))
+		*list = append(*list, strings.Trim(item, "\""))
 	}
 	return nil
 }
@@ -106,7 +107,7 @@ func encodeMap(kv map[string]string) ([]byte, error) {
 	sb.WriteString("{")
 	count := len(kv)
 	for k, v := range kv {
-		sb.WriteString(fmt.Sprintf("\"%s\"\":\"\"%s\"", k, v))
+		sb.WriteString(fmt.Sprintf("\"%s\":\"%s\"", k, v))
 		count--
 		if count > 0 {
 			sb.WriteString(",")
@@ -116,7 +117,7 @@ func encodeMap(kv map[string]string) ([]byte, error) {
 	return []byte(sb.String()), nil
 }
 
-func decodeMap(data []byte, kv map[string]string) error {
+func decodeMap(data []byte, kv *map[string]string) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -126,6 +127,8 @@ func decodeMap(data []byte, kv map[string]string) error {
 		return nil
 	}
 
+	*kv = make(map[string]string)
+
 	items := strings.Split(str, "\",\"")
 	for _, item := range items {
 		parts := strings.SplitN(item, "\":\"", 2)
@@ -134,7 +137,7 @@ func decodeMap(data []byte, kv map[string]string) error {
 		}
 		key := strings.Trim(parts[0], "\"")
 		value := strings.Trim(parts[1], "\"")
-		kv[key] = value
+		(*kv)[key] = value
 	}
 	return nil
 }

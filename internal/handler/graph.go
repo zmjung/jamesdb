@@ -42,7 +42,6 @@ func (gh *GraphHandler) CreateGraphNode(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid input", "node": node})
 		return
 	}
-	c.BindJSON(node)
 
 	id, err := uuid.GenerateUUID()
 	if err != nil {
