@@ -3,6 +3,7 @@ package disk
 import (
 	"encoding/csv"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,16 +17,30 @@ func ReadNodesFromFile(filePath string) ([]graph.Node, error) {
 
 	fmt.Printf("Reading from file: %s\n", filePath)
 
-	file, err := os.ReadFile(filePath)
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 
-	lines := string(file)
+	return readNodesFromReader(file)
+}
 
-	csvReader := csv.NewReader(strings.NewReader(lines))
+func readNodesFromReader(reader io.Reader) ([]graph.Node, error) {
+	// This function normally reads the CSV content from
+	// a file (os.File in production and io.Reader in tests).
+	// It returns a slice of graph.Node.``
+	csvReader := csv.NewReader(reader)
 
+	// Preallocate nodes slice for efficiency if possible
+	var nodes []graph.Node
 	dec, err := csvutil.NewDecoder(csvReader)
+	if err != nil {
+		return nil, err
+	}
+	if dec == nil {
+		return nil, fmt.Errorf("failed to create CSV decoder")
+	}
 	dec.Tag = "json" // Use JSON tags for decoding
 	dec.WithUnmarshalers(
 		csvutil.NewUnmarshalers(
@@ -33,19 +48,13 @@ func ReadNodesFromFile(filePath string) ([]graph.Node, error) {
 			csvutil.UnmarshalFunc(decodeMap),
 		),
 	)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: is it more optimal to use slice or array?
-	nodes := []graph.Node{}
 	if err := dec.Decode(&nodes); err != nil {
 		return nil, err
 	}
 	return nodes, nil
 }
 
-func WriteNodeToFile(filePath string, node *graph.Node) error {
+func WriteNodesAsCsv(filePath string, nodes []graph.Node) error {
 	// This function writes a CSV line to a file.
 	// Assume that the filePath exists and is writable.
 
@@ -58,11 +67,15 @@ func WriteNodeToFile(filePath string, node *graph.Node) error {
 	}
 	defer file.Close()
 
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
+	return writeCsvToWriter(file, nodes)
+}
+
+func writeCsvToWriter(writer io.Writer, nodes []graph.Node) error {
+	// This function writes a slice of graph.Node to a CSV writer.
+	csvWriter := csv.NewWriter(writer)
 
 	// Create an encoder
-	encoder := csvutil.NewEncoder(writer)
+	encoder := csvutil.NewEncoder(csvWriter)
 	encoder.AutoHeader = false
 
 	encoder.WithMarshalers(
@@ -71,7 +84,17 @@ func WriteNodeToFile(filePath string, node *graph.Node) error {
 			csvutil.MarshalFunc(encodeMap),
 		),
 	)
-	return encoder.Encode(node)
+
+	for _, node := range nodes {
+		if err := encoder.Encode(node); err != nil {
+			return fmt.Errorf("failed to encode node: %w", err)
+		}
+	}
+	csvWriter.Flush()
+	if err := csvWriter.Error(); err != nil {
+		return fmt.Errorf("failed to write CSV: %w", err)
+	}
+	return nil
 }
 
 func encodeList(list []string) ([]byte, error) {

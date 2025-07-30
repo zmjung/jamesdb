@@ -64,5 +64,5 @@ func (gw *GraphService) WriteNode(node *graph.Node) error {
 
 	// save the csv data to a file
 	// file name is based on node type
-	return disk.WriteNodeToFile(filePath, node)
+	return disk.WriteNodesAsCsv(filePath, []graph.Node{*node})
 }
