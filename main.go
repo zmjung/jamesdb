@@ -7,6 +7,7 @@ import (
 	"github.com/zmjung/jamesdb/config"
 	"github.com/zmjung/jamesdb/internal/grapher"
 	"github.com/zmjung/jamesdb/internal/handler"
+	"github.com/zmjung/jamesdb/internal/middleware"
 	"github.com/zmjung/jamesdb/internal/router"
 )
 
@@ -18,6 +19,8 @@ func main() {
 	}
 
 	engine := gin.Default()
+	engine.Use(middleware.GetLogging())
+	engine.Use(middleware.GetRecovery())
 
 	gs := grapher.NewGraphService(&cfg)
 	if gs == nil {
