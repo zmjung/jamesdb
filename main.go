@@ -39,5 +39,7 @@ func main() {
 	router := router.NewRouter(graphHandler)
 	router.SetupRoutes(engine)
 
-	engine.Run(cfg.Server.Host + ":" + strconv.Itoa(cfg.Server.Port))
+	if engine.Run(cfg.Server.Host+":"+strconv.Itoa(cfg.Server.Port)) != nil {
+		panic("Failed to start gin engine")
+	}
 }
