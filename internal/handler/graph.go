@@ -7,6 +7,7 @@ import (
 	"github.com/zmjung/jamesdb/config"
 	"github.com/zmjung/jamesdb/graph"
 	"github.com/zmjung/jamesdb/internal/grapher"
+	"github.com/zmjung/jamesdb/internal/log"
 	"github.com/zmjung/jamesdb/internal/uuid"
 )
 
@@ -23,9 +24,10 @@ func NewGraphHandler(cfg config.Config, gs *grapher.GraphService) *GraphHandler 
 }
 
 func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
+	ctx := log.GetContext(c)
 	// TODO: sanitize type input
 	nodeType := c.Param("type")
-	nodes, err := gh.GraphService.GetAllNodesByType(nodeType)
+	nodes, err := gh.GraphService.GetAllNodesByType(ctx, nodeType)
 
 	if err != nil {
 		c.JSON(500, gin.H{"error": fmt.Sprintf("Failed to retrieve nodes of type %s: %v", nodeType, err)})
@@ -36,6 +38,8 @@ func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
 
 func (gh *GraphHandler) CreateGraphNode(c *gin.Context) {
 	// This function writes a graph node to the storage.
+
+	ctx := log.GetContext(c)
 
 	node := &graph.Node{}
 	if err := c.ShouldBindJSON(node); err != nil {
@@ -51,7 +55,7 @@ func (gh *GraphHandler) CreateGraphNode(c *gin.Context) {
 	}
 	node.ID = id
 
-	err = gh.GraphService.WriteNode(node)
+	err = gh.GraphService.WriteNode(ctx, node)
 	if err != nil {
 		fmt.Printf("Error writing node data: %v\n", err)
 		c.JSON(500, gin.H{"error": "Failed to write node data", "node": node})

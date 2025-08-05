@@ -1,20 +1,20 @@
 package middleware
 
 import (
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/zmjung/jamesdb/internal/uuid"
+	"github.com/zmjung/jamesdb/internal/log"
 )
 
 func GetLogging() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		requestId := setRequestId(c)
-		log.Printf("[%s] %s %s started", requestId, c.Request.Method, c.Request.URL.Path)
+		ctx := log.GetContext(c)
+		slog.InfoContext(ctx, "Started request")
 		c.Next()
-		log.Printf("[%s] %s %s completed in %v", requestId, c.Request.Method, c.Request.URL.Path, time.Since(start))
+		slog.InfoContext(ctx, "Completed request", "time", time.Since(start))
 	}
 }
 
@@ -27,14 +27,4 @@ func GetRecovery() gin.HandlerFunc {
 		}()
 		c.Next()
 	}
-}
-
-func setRequestId(c *gin.Context) string {
-	requestId, err := uuid.GenerateShortID()
-	if err != nil {
-		log.Printf("Error generating thread ID: %v", err)
-		requestId = "unknown"
-	}
-	c.Set("requestId", requestId)
-	return requestId
 }

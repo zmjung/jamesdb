@@ -18,6 +18,12 @@ type Config struct {
 	Database struct {
 		RootPath string `yaml:"rootPath" envconfig:"ROOT_PATH"`
 	} `yaml:"database"`
+
+	Logging struct {
+		Level  string `yaml:"level" envconfig:"LOG_LEVEL" default:"info"`
+		Format string `yaml:"format" envconfig:"LOG_FORMAT" default:"json"`
+		Source bool   `yaml:"source" envconfig:"LOG_SOURCE" default:"false"`
+	} `yaml:"logging"`
 }
 
 func LoadConfig(cfg *Config, configPath string) error {

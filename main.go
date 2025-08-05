@@ -7,6 +7,7 @@ import (
 	"github.com/zmjung/jamesdb/config"
 	"github.com/zmjung/jamesdb/internal/grapher"
 	"github.com/zmjung/jamesdb/internal/handler"
+	"github.com/zmjung/jamesdb/internal/log"
 	"github.com/zmjung/jamesdb/internal/middleware"
 	"github.com/zmjung/jamesdb/internal/router"
 )
@@ -18,11 +19,13 @@ func main() {
 		panic("Failed to load configuration: " + err.Error())
 	}
 
+	log.SetDefaultLogger(cfg)
+
 	engine := gin.Default()
 	engine.Use(middleware.GetLogging())
 	engine.Use(middleware.GetRecovery())
 
-	gs := grapher.NewGraphService(&cfg)
+	gs := grapher.NewGraphService(cfg)
 	if gs == nil {
 		panic("Failed to create GraphWriter")
 	}

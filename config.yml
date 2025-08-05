@@ -3,3 +3,6 @@ server:
   port: 8080
 database:
   rootPath: ""
+logging:
+  level: "info"
+  format: "json"
