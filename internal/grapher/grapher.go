@@ -20,7 +20,7 @@ type GraphService struct {
 	NodePath        string
 }
 
-func NewGraphService(cfg config.Config) *GraphService {
+func NewGraphService(cfg *config.Config) *GraphService {
 	nodePath, err := disk.AddFolder(cfg.Database.RootPath, "nodes")
 	if err != nil {
 		slog.Error("Error creating nodes folder", "error", err)

@@ -16,7 +16,7 @@ type GraphHandler struct {
 	GraphService    *grapher.GraphService
 }
 
-func NewGraphHandler(cfg config.Config, gs *grapher.GraphService) *GraphHandler {
+func NewGraphHandler(cfg *config.Config, gs *grapher.GraphService) *GraphHandler {
 	return &GraphHandler{
 		StorageRootPath: cfg.Database.RootPath,
 		GraphService:    gs,

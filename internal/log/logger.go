@@ -37,7 +37,7 @@ func getLoggerFormat(format string, opt *slog.HandlerOptions) *slog.Logger {
 	}
 }
 
-func SetDefaultLogger(cfg config.Config) {
+func SetDefaultLogger(cfg *config.Config) {
 	opt := &slog.HandlerOptions{
 		Level:     getLogLevel(cfg.Logging.Level),
 		AddSource: cfg.Logging.Source,

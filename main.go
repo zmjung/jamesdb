@@ -14,18 +14,22 @@ import (
 	"github.com/zmjung/jamesdb/internal/router"
 )
 
-func main() {
+func loadConfig() *config.Config {
 	configPath := flag.String("config", "config.yml", "configuration file path")
 	flag.Parse()
 
-	var cfg config.Config
-	err := config.LoadConfig(&cfg, *configPath)
+	cfg := &config.Config{}
+	err := config.LoadConfig(cfg, *configPath)
 	if err != nil {
 		panic("Failed to load configuration: " + err.Error())
 	}
+	return cfg
+}
 
+func main() {
+	cfg := loadConfig()
 	log.SetDefaultLogger(cfg)
-	slog.Debug("Using config file", "configPath", *configPath, "config", cfg)
+	slog.Debug("Using config file", "config", cfg)
 
 	engine := gin.Default()
 	engine.Use(middleware.GetLogging())
