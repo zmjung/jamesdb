@@ -24,7 +24,8 @@ func NewGraphHandler(cfg config.Config, gs *grapher.GraphService) *GraphHandler 
 }
 
 func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
-	ctx := log.GetContext(c)
+	// This function gets all graph nodes according to the passed node type
+	ctx := log.ConvertContext(c)
 	// TODO: sanitize type input
 	nodeType := c.Param("type")
 	nodes, err := gh.GraphService.GetAllNodesByType(ctx, nodeType)
@@ -38,8 +39,7 @@ func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
 
 func (gh *GraphHandler) CreateGraphNode(c *gin.Context) {
 	// This function writes a graph node to the storage.
-
-	ctx := log.GetContext(c)
+	ctx := log.ConvertContext(c)
 
 	node := &graph.Node{}
 	if err := c.ShouldBindJSON(node); err != nil {

@@ -11,7 +11,7 @@ import (
 func GetLogging() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		ctx := log.GetContext(c)
+		ctx := log.ConvertContext(c)
 		slog.InfoContext(ctx, "Started request")
 		c.Next()
 		slog.InfoContext(ctx, "Completed request", "time", time.Since(start))

@@ -20,19 +20,15 @@ func NewRequestContext(ctx context.Context, value any) context.Context {
 	return context.WithValue(ctx, requestKey, value)
 }
 
-func getRequest(ctx context.Context) (map[string]string, bool) {
-	value, ok := ctx.Value(requestKey).(map[string]string)
-	return value, ok
-}
-
 func (h *CustomJSONHandler) Handle(ctx context.Context, r slog.Record) error {
-	if request, exists := getRequest(ctx); exists {
+	request := ctx.Value(requestKey)
+	if request != nil {
 		r.AddAttrs(slog.Any(string(requestKey), request))
 	}
 	return h.JSONHandler.Handle(ctx, r)
 }
 
-func GetContext(c *gin.Context) context.Context {
+func ConvertContext(c *gin.Context) context.Context {
 	requestId := c.GetString("requestId")
 	if requestId == "" {
 		var err error
