@@ -35,11 +35,11 @@ func main() {
 	engine.Use(middleware.GetLogging())
 	engine.Use(middleware.GetRecovery())
 
-	gs := grapher.NewGraphService(cfg)
-	if gs == nil {
-		panic("Failed to create GraphWriter")
+	g := grapher.GetInstance(cfg)
+	if g == nil {
+		panic("Failed to create grapher")
 	}
-	graphHandler := handler.NewGraphHandler(cfg, gs)
+	graphHandler := handler.NewGraphHandler(cfg, g)
 	router := router.NewRouter(graphHandler)
 	router.SetupRoutes(engine)
 

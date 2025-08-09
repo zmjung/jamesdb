@@ -13,13 +13,13 @@ import (
 
 type GraphHandler struct {
 	StorageRootPath string
-	GraphService    *grapher.GraphService
+	Grapher         grapher.Grapher
 }
 
-func NewGraphHandler(cfg *config.Config, gs *grapher.GraphService) *GraphHandler {
+func NewGraphHandler(cfg *config.Config, g grapher.Grapher) *GraphHandler {
 	return &GraphHandler{
 		StorageRootPath: cfg.Database.RootPath,
-		GraphService:    gs,
+		Grapher:         g,
 	}
 }
 
@@ -28,7 +28,7 @@ func (gh *GraphHandler) GetGraphNodes(c *gin.Context) {
 	ctx := log.ConvertContext(c)
 	// TODO: sanitize type input
 	nodeType := c.Param("type")
-	nodes, err := gh.GraphService.GetAllNodesByType(ctx, nodeType)
+	nodes, err := gh.Grapher.ReadNodesByType(ctx, nodeType)
 
 	if err != nil {
 		c.JSON(500, gin.H{"error": fmt.Sprintf("Failed to retrieve nodes of type %s: %v", nodeType, err)})
@@ -55,7 +55,7 @@ func (gh *GraphHandler) CreateGraphNode(c *gin.Context) {
 	}
 	node.ID = id
 
-	err = gh.GraphService.WriteNode(ctx, node)
+	err = gh.Grapher.WriteNode(ctx, node)
 	if err != nil {
 		fmt.Printf("Error writing node data: %v\n", err)
 		c.JSON(500, gin.H{"error": "Failed to write node data", "node": node})

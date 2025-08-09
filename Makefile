@@ -1,19 +1,20 @@
 .DEFAULT_GOAL := refresh
 
+APP_NAME = jamesdb
 GOBIN_F = $(GOPATH)/bin/
 
 ifeq ($(OS),Windows_NT)
 	SHELL = cmd.exe
 	RM = del
 	IGNORE = > nul 2> nul
-	BINARY_NAME = jamesdb.exe
+	BINARY_NAME = $(APP_NAME).exe
 	PLATFORM = windows
 	GOBIN = $(subst /,\,$(GOBIN_F))
 else
 	SHELL = /bin/sh
 	RM = rm -f
 	IGNORE = 2>/dev/null
-	BINARY_NAME = jamesdb
+	BINARY_NAME = $(APP_NAME)
 	PLATFORM = $(shell uname -s | tr '[:upper:]' '[:lower:]')
 	GOBIN = $(GOBIN_F)
 endif
@@ -41,7 +42,7 @@ deps: download tidy
 refresh: clean fmt tidy
 
 test:
-	@go test -v -cover ./...
+	@go test ./...
 
 test-race:
 	@go test -race ./...

@@ -48,7 +48,7 @@ func readNodesFromReader(reader io.Reader) ([]graph.Node, error) {
 			csvutil.UnmarshalFunc(decodeMap),
 		),
 	)
-	if err := dec.Decode(&nodes); err != nil {
+	if err := dec.Decode(&nodes); err != nil && err != io.EOF {
 		return nil, err
 	}
 	return nodes, nil
@@ -212,6 +212,20 @@ func AddFolder(rootPath string, folderName string) (string, error) {
 	}
 
 	return absPath, nil
+}
+
+func InitFileWithHeader(filePath string, csvHeader string) error {
+	isFileEmpty, err := IsFileEmpty(filePath)
+	if err != nil {
+		return err
+	}
+
+	if isFileEmpty {
+		// if the file is empty, setup header
+		err = WriteCsvToFile(filePath, csvHeader)
+	}
+
+	return err
 }
 
 func GetFilePath(rootPath string, fileName string) string {
