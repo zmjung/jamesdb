@@ -11,36 +11,38 @@ import (
 
 var EmptyGraphNodes = []graph.Node{}
 
-type worker interface {
+type Worker interface {
 	ReadNodes(ctx context.Context) ([]graph.Node, error)
 	WriteNodes(ctx context.Context, nodes []graph.Node) error
 }
 
-type impl struct {
-	parent   *graphService
+type worker struct {
+	f        disk.FileAccessor
+	csv      disk.CsvAccessor
 	nodeType string
 	filePath string
 	lock     *sync.Mutex
 }
 
-func NewWorker(parent *graphService, nodeType string) worker {
-	filePath := disk.GetFilePath(parent.NodePath, nodeType+".csv")
-	err := disk.InitFileWithHeader(filePath, graph.NodeCsvHeader)
+func newWorker(f disk.FileAccessor, csv disk.CsvAccessor, nodePath string, nodeType string) Worker {
+	filePath := f.GetFilePath(nodePath, nodeType+".csv")
+	err := csv.CreateFileWithHeader(context.Background(), filePath, graph.NodeCsvHeader)
 	if err != nil {
 		slog.Error("Error creating headers for nodes file", "error", err)
 		return nil
 	}
 
-	return &impl{
-		parent:   parent,
+	return &worker{
+		f:        f,
+		csv:      csv,
 		nodeType: nodeType,
 		filePath: filePath,
 		lock:     &sync.Mutex{},
 	}
 }
 
-func (w *impl) initFile(ctx context.Context) error {
-	isEmpty, err := disk.IsFileEmpty(w.filePath)
+func (w *worker) initFile(ctx context.Context) error {
+	isEmpty, err := w.f.IsFileEmpty(w.filePath)
 	if err != nil {
 		slog.ErrorContext(ctx, "Error creating headers for nodes file", "error", err)
 		return err
@@ -52,16 +54,16 @@ func (w *impl) initFile(ctx context.Context) error {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
-	return disk.InitFileWithHeader(w.filePath, graph.NodeCsvHeader)
+	return w.csv.CreateFileWithHeader(ctx, w.filePath, graph.NodeCsvHeader)
 }
 
-func (w *impl) ReadNodes(ctx context.Context) ([]graph.Node, error) {
+func (w *worker) ReadNodes(ctx context.Context) ([]graph.Node, error) {
 	if err := w.initFile(ctx); err != nil {
 		return nil, err
 	}
 
 	w.lock.Lock()
-	nodes, err := disk.ReadNodesFromFile(w.filePath)
+	nodes, err := w.csv.ReadNodesFromFile(ctx, w.filePath)
 	w.lock.Unlock()
 
 	if err != nil {
@@ -76,13 +78,13 @@ func (w *impl) ReadNodes(ctx context.Context) ([]graph.Node, error) {
 	return nodes, nil
 }
 
-func (w *impl) WriteNodes(ctx context.Context, nodes []graph.Node) error {
+func (w *worker) WriteNodes(ctx context.Context, nodes []graph.Node) error {
 	if err := w.initFile(ctx); err != nil {
 		return err
 	}
 
 	w.lock.Lock()
-	err := disk.WriteNodesAsCsv(w.filePath, nodes)
+	err := w.csv.WriteNodesAsCsv(ctx, w.filePath, nodes)
 	w.lock.Unlock()
 
 	if err != nil {

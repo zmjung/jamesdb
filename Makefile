@@ -23,7 +23,7 @@ SRC_DIR = .
 LDFLAGS = -ldflags "-s -w"
 INSTALLED_BIN = $(GOBIN)$(BINARY_NAME)
 
-.PHONY: fmt tidy refresh test test-race build clean
+.PHONY: fmt tidy refresh test test-race cover build clean
 
 fmt:
 	@go fmt ./...
@@ -46,6 +46,9 @@ test:
 
 test-race:
 	@go test -race ./...
+
+cover:
+	@go test -v -cover ./...
 
 lint:
 	@golangci-lint run

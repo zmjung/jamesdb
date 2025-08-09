@@ -4,6 +4,7 @@ import (
 	"log"
 	"log/slog"
 
+	"github.com/fatih/color"
 	"github.com/zmjung/jamesdb/config"
 )
 
@@ -27,8 +28,11 @@ func getLoggerFormat(format string, opt *slog.HandlerOptions) *slog.Logger {
 	case "text":
 		return slog.New(slog.NewTextHandler(log.Writer(), opt))
 	case "custom":
+		color.NoColor = false
 		return slog.New(&CustomJSONHandler{
 			JSONHandler: *slog.NewJSONHandler(log.Writer(), opt),
+			w:           log.Writer(),
+			opt:         opt,
 		})
 	case "json":
 		fallthrough

@@ -11,8 +11,8 @@ import (
 func TestNodeType(t *testing.T) {
 	header, err := csvutil.Header(Node{}, "json")
 	require.NoError(t, err)
-	
-	headerCsv := strings.Join(header, ",")+"\n"
+
+	headerCsv := strings.Join(header, ",") + "\n"
 
 	require.Equal(t, headerCsv, NodeCsvHeader)
 }

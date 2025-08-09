@@ -10,10 +10,6 @@ import (
 	"github.com/zmjung/jamesdb/internal/disk"
 )
 
-const (
-	NodeCsvHeader = "id,type,name,edges,traits\n"
-)
-
 var instance Grapher
 var grapherOnce sync.Once
 
@@ -23,21 +19,23 @@ type Grapher interface {
 }
 
 type graphService struct {
-	StorageRootPath  string
-	NodePath         string
-	NodeTypeToWorker map[string]worker
-	Lock             *sync.Mutex
+	f                disk.FileAccessor
+	csv              disk.CsvAccessor
+	rootPath         string
+	nodePath         string
+	nodeTypeToWorker map[string]Worker
+	lock             *sync.Mutex
 }
 
-func GetInstance(cfg *config.Config) Grapher {
+func GetInstance(cfg *config.Config, f disk.FileAccessor, csv disk.CsvAccessor) Grapher {
 	grapherOnce.Do(func() {
-		instance = newGrapher(cfg)
+		instance = newGrapher(cfg, f, csv)
 	})
 	return instance
 }
 
-func newGrapher(cfg *config.Config) Grapher {
-	nodePath, err := disk.AddFolder(cfg.Database.RootPath, "nodes")
+func newGrapher(cfg *config.Config, f disk.FileAccessor, csv disk.CsvAccessor) Grapher {
+	nodePath, err := f.AddFolder(cfg.Database.RootPath, "nodes")
 	if err != nil {
 		slog.Error("Error creating nodes folder", "error", err)
 		return nil
@@ -46,24 +44,26 @@ func newGrapher(cfg *config.Config) Grapher {
 	slog.Debug("Set node path", "nodePath", nodePath)
 
 	return &graphService{
-		StorageRootPath:  cfg.Database.RootPath,
-		NodePath:         nodePath,
-		NodeTypeToWorker: make(map[string]worker),
-		Lock:             &sync.Mutex{},
+		f:                f,
+		csv:              csv,
+		rootPath:         cfg.Database.RootPath,
+		nodePath:         nodePath,
+		nodeTypeToWorker: make(map[string]Worker),
+		lock:             &sync.Mutex{},
 	}
 }
 
-func (gs *graphService) getWorker(nodeType string) worker {
-	w, exists := gs.NodeTypeToWorker[nodeType]
+func (gs *graphService) getWorker(nodeType string) Worker {
+	w, exists := gs.nodeTypeToWorker[nodeType]
 	if exists {
 		return w
 	}
 
-	gs.Lock.Lock()
-	defer gs.Lock.Unlock()
+	gs.lock.Lock()
+	defer gs.lock.Unlock()
 
-	w = NewWorker(gs, nodeType)
-	gs.NodeTypeToWorker[nodeType] = w
+	w = newWorker(gs.f, gs.csv, gs.nodePath, nodeType)
+	gs.nodeTypeToWorker[nodeType] = w
 	return w
 }
 

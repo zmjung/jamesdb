@@ -21,3 +21,4 @@ Next step:
 - [ ] support Edges
 - [ ] support one graph algorithm
 - [ ] optimize locking at worker.go
+- [ ] write test in worker_test.go

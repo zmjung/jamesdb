@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/zmjung/jamesdb/config"
+	"github.com/zmjung/jamesdb/internal/disk"
 	"github.com/zmjung/jamesdb/internal/grapher"
 	"github.com/zmjung/jamesdb/internal/handler"
 	"github.com/zmjung/jamesdb/internal/log"
@@ -35,7 +36,10 @@ func main() {
 	engine.Use(middleware.GetLogging())
 	engine.Use(middleware.GetRecovery())
 
-	g := grapher.GetInstance(cfg)
+	f := disk.NewFileAccessor()
+	csv := disk.NewCsvAccessor(f)
+
+	g := grapher.GetInstance(cfg, f, csv)
 	if g == nil {
 		panic("Failed to create grapher")
 	}
