@@ -12,6 +12,10 @@ import (
 	"github.com/zmjung/jamesdb/internal/uuid"
 )
 
+type SimpleJSONHandler struct {
+	slog.JSONHandler
+}
+
 type CustomJSONHandler struct {
 	slog.JSONHandler
 	w   io.Writer
@@ -38,6 +42,14 @@ func colorize(level slog.Level, line string) string {
 		return color.RedString(line)
 	}
 	return color.WhiteString(line)
+}
+
+func (h *SimpleJSONHandler) Handle(ctx context.Context, r slog.Record) error {
+	request := ctx.Value(requestKey)
+	if request != nil {
+		r.AddAttrs(slog.Any(string(requestKey), request))
+	}
+	return h.JSONHandler.Handle(ctx, r)
 }
 
 func (h *CustomJSONHandler) Handle(ctx context.Context, r slog.Record) error {

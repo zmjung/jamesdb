@@ -27,6 +27,8 @@ func getLoggerFormat(format string, opt *slog.HandlerOptions) *slog.Logger {
 	switch format {
 	case "text":
 		return slog.New(slog.NewTextHandler(log.Writer(), opt))
+	case "json":
+		return slog.New(slog.NewJSONHandler(log.Writer(), opt))
 	case "custom":
 		color.NoColor = false
 		return slog.New(&CustomJSONHandler{
@@ -34,10 +36,12 @@ func getLoggerFormat(format string, opt *slog.HandlerOptions) *slog.Logger {
 			w:           log.Writer(),
 			opt:         opt,
 		})
-	case "json":
+	case "simple":
 		fallthrough
 	default:
-		return slog.New(slog.NewJSONHandler(log.Writer(), opt))
+		return slog.New(&SimpleJSONHandler{
+			JSONHandler: *slog.NewJSONHandler(log.Writer(), opt),
+		})
 	}
 }
 
