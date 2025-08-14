@@ -14,12 +14,12 @@ const csvTwoNodes = `id,type,name,edges,traits
 2,type2,node2,"[""edge3"",""edge4""]","{""trait2"":""value2""}"
 `
 
-func Test_readNodesFromIo(t *testing.T) {
-	csv := &csvService{}
+func Test_ReadCsv(t *testing.T) {
 	ctx := context.Background()
 
 	reader := strings.NewReader(csvTwoNodes)
-	nodes, err := csv.readNodesFromReader(ctx, reader)
+	var nodes []graph.Node
+	err := ReadCsv(ctx, reader, &nodes)
 	if err != nil {
 		t.Fatalf("Failed to read nodes from IO: %v", err)
 	}
@@ -34,7 +34,6 @@ func Test_readNodesFromIo(t *testing.T) {
 }
 
 func Test_writeCsvToWriter(t *testing.T) {
-	csv := &csvService{}
 	ctx := context.Background()
 
 	nodes := getTwoNodes()
@@ -42,7 +41,7 @@ func Test_writeCsvToWriter(t *testing.T) {
 	writer := new(strings.Builder)
 	writer.WriteString(graph.NodeCsvHeader)
 
-	err := csv.writeCsvToWriter(ctx, writer, nodes)
+	err := WriteCsv(ctx, writer, &nodes)
 	if err != nil {
 		t.Fatalf("Failed to write nodes to writer: %v", err)
 	}

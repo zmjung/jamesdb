@@ -7,8 +7,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/require"
 	"github.com/zmjung/jamesdb/graph"
 	"github.com/zmjung/jamesdb/internal/disk"
+)
+
+const (
+	TwoNodesCsv = `1,type1,node1,"[""edge1"",""edge2""]","{""trait1"":""value1""}"
+2,type2,node2,"[""edge3"",""edge4""]","{""trait2"":""value2""}"
+`
 )
 
 type nopWriteCloser struct {
@@ -71,35 +78,22 @@ func (m *MockFileAccessor) GetFilePath(rootPath string, fileName string) string 
 	return m.f.GetFilePath(rootPath, fileName)
 }
 
-type MockCsvAccessor struct {
-}
-
-func GetCsvAccessor() disk.CsvAccessor {
-	return &MockCsvAccessor{}
-}
-
-func (m *MockCsvAccessor) ReadNodesFromFile(cxt context.Context, filePath string) ([]graph.Node, error) {
-	return nil, nil
-}
-func (m *MockCsvAccessor) WriteNodesAsCsv(cxt context.Context, filePath string, nodes []graph.Node) error {
-	return nil
-}
-func (m *MockCsvAccessor) CreateFileWithHeader(ctx context.Context, filePath string, csvHeader string) error {
-	return nil
-}
-
 func TestWriteNodes(t *testing.T) {
 	ctx := context.Background()
 
 	reader := new(bytes.Buffer)
 	writer := new(bytes.Buffer)
 	f := GetFileAccessor(reader, writer)
-	csv := GetCsvAccessor()
+	csv := disk.NewCsvAccessor(f)
 
 	w := newWorker(f, csv, "nodePath", "nodeType")
 
 	nodes := getTwoNodes()
 	w.WriteNodes(ctx, nodes)
+
+	bytes, err := io.ReadAll(writer)
+	require.NoError(t, err)
+	require.Equal(t, TwoNodesCsv, string(bytes))
 }
 
 func getTwoNodes() []graph.Node {

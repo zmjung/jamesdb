@@ -12,6 +12,58 @@ import (
 	"github.com/zmjung/jamesdb/graph"
 )
 
+func ReadCsv(ctx context.Context, r io.Reader, v any) error {
+	csvReader := csv.NewReader(r)
+
+	// Preallocate nodes slice for efficiency if possible
+	dec, err := csvutil.NewDecoder(csvReader)
+	if err != nil {
+		return err
+	}
+	if dec == nil {
+		err := errors.New("failed to create CSV decoder")
+		slog.ErrorContext(ctx, "Decoder cannot be nil", "error", err)
+		return err
+	}
+	dec.Tag = "json" // Use JSON tags for decoding
+	dec.WithUnmarshalers(
+		csvutil.NewUnmarshalers(
+			csvutil.UnmarshalFunc(decodeList),
+			csvutil.UnmarshalFunc(decodeMap),
+		),
+	)
+	if err := dec.Decode(v); err != nil && err != io.EOF {
+		return err
+	}
+	return nil
+}
+
+func WriteCsv(ctx context.Context, w io.Writer, v any) error {
+	csvWriter := csv.NewWriter(w)
+
+	// Create an encoder
+	encoder := csvutil.NewEncoder(csvWriter)
+	encoder.AutoHeader = false
+
+	encoder.WithMarshalers(
+		csvutil.NewMarshalers(
+			csvutil.MarshalFunc(encodeList),
+			csvutil.MarshalFunc(encodeMap),
+		),
+	)
+
+	if err := encoder.Encode(v); err != nil {
+		slog.ErrorContext(ctx, "Failed to encode data", "error", err)
+	}
+
+	csvWriter.Flush()
+	if err := csvWriter.Error(); err != nil {
+		slog.ErrorContext(ctx, "Failed to write CSV", "error", err)
+		return err
+	}
+	return nil
+}
+
 type CsvAccessor interface {
 	ReadNodesFromFile(cxt context.Context, filePath string) ([]graph.Node, error)
 	WriteNodesAsCsv(cxt context.Context, filePath string, nodes []graph.Node) error
@@ -35,36 +87,11 @@ func (s *csvService) ReadNodesFromFile(ctx context.Context, filePath string) ([]
 	if err != nil {
 		return nil, err
 	}
-
 	defer reader.Close()
-	return s.readNodesFromReader(ctx, reader)
-}
 
-func (s *csvService) readNodesFromReader(ctx context.Context, reader io.Reader) ([]graph.Node, error) {
-	csvReader := csv.NewReader(reader)
-
-	// Preallocate nodes slice for efficiency if possible
 	var nodes []graph.Node
-	dec, err := csvutil.NewDecoder(csvReader)
-	if err != nil {
-		return nil, err
-	}
-	if dec == nil {
-		err := errors.New("failed to create CSV decoder")
-		slog.ErrorContext(ctx, "Decoder cannot be nil", "error", err)
-		return nil, err
-	}
-	dec.Tag = "json" // Use JSON tags for decoding
-	dec.WithUnmarshalers(
-		csvutil.NewUnmarshalers(
-			csvutil.UnmarshalFunc(decodeList),
-			csvutil.UnmarshalFunc(decodeMap),
-		),
-	)
-	if err := dec.Decode(&nodes); err != nil && err != io.EOF {
-		return nil, err
-	}
-	return nodes, nil
+	err = ReadCsv(ctx, reader, &nodes)
+	return nodes, err
 }
 
 func (s *csvService) WriteNodesAsCsv(ctx context.Context, filePath string, nodes []graph.Node) error {
@@ -77,36 +104,7 @@ func (s *csvService) WriteNodesAsCsv(ctx context.Context, filePath string, nodes
 	}
 	defer writer.Close()
 
-	return s.writeCsvToWriter(ctx, writer, nodes)
-}
-
-func (s *csvService) writeCsvToWriter(ctx context.Context, writer io.Writer, nodes []graph.Node) error {
-	// This function writes a slice of graph.Node to a CSV writer.
-	csvWriter := csv.NewWriter(writer)
-
-	// Create an encoder
-	encoder := csvutil.NewEncoder(csvWriter)
-	encoder.AutoHeader = false
-
-	encoder.WithMarshalers(
-		csvutil.NewMarshalers(
-			csvutil.MarshalFunc(encodeList),
-			csvutil.MarshalFunc(encodeMap),
-		),
-	)
-
-	for _, node := range nodes {
-		if err := encoder.Encode(node); err != nil {
-			slog.ErrorContext(ctx, "Failed to encode node", "error", err)
-			return err
-		}
-	}
-	csvWriter.Flush()
-	if err := csvWriter.Error(); err != nil {
-		slog.ErrorContext(ctx, "Failed to write CSV", "error", err)
-		return err
-	}
-	return nil
+	return WriteCsv(ctx, writer, nodes)
 }
 
 func (s *csvService) WriteCsvToFile(ctx context.Context, filePath string, csvLine string) error {

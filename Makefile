@@ -23,7 +23,7 @@ SRC_DIR = .
 LDFLAGS = -ldflags "-s -w"
 INSTALLED_BIN = $(GOBIN)$(BINARY_NAME)
 
-.PHONY: fmt tidy refresh test test-race cover build clean
+.PHONY: fmt tidy refresh test test-race test-cover build clean
 
 fmt:
 	@go fmt ./...
@@ -47,7 +47,7 @@ test:
 test-race:
 	@go test -race ./...
 
-cover:
+test-cover:
 	@go test -v -cover ./...
 
 lint:
@@ -78,6 +78,7 @@ help:
 	@echo   refresh      - Format and tidy
 	@echo   test         - Run tests
 	@echo   test-race    - Run tests with race detector
+	@echo   test-cover   - Run tests with coverage
 	@echo   lint         - Lint code
 	@echo   build        - Build application
 	@echo   clean        - Remove build artifacts
